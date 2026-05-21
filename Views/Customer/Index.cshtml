@@ -1,0 +1,131 @@
+﻿
+@model List<ResultCustomerDto>
+
+
+@{
+    ViewData["Title"] = "Müşteri Listesi";
+    
+    // İstatistik Hesaplamaları (Tüm liste üzerinden değil, sayfadaki Model üzerinden)
+    // Not: Gerçek senaryoda bu istatistikler tüm veritabanı üzerinden Controller'da hesaplanıp ViewBag ile gönderilmelidir.
+    var totalCustomer = ViewBag.TotalCount ?? Model.Count;
+}
+
+<!-- Tailwind CSS ve Icons -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<div class="min-h-screen bg-gray-50 pb-10">
+    <!-- Header -->
+    <header class="bg-white border-b sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-emerald-600 p-2 rounded-lg">
+                    <!-- İkon müşteriye daha uygun olan 'people' ikonuyla değiştirildi -->
+                    <i class="bi bi-people-fill text-white text-xl"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-tight text-gray-800">Müşteri Listesi</h1>
+            </div>
+            <a href="/Customer/Create" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-100">
+                <i class="bi bi-plus-lg"></i>
+                <span>Yeni Müşteri</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- İstatistik Kartları -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-2xl border shadow-sm flex items-center gap-4">
+                <div class="bg-blue-100 p-3 rounded-xl text-blue-600"><i class="bi bi-people text-2xl"></i></div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Toplam Müşteri</p>
+                    <p class="text-2xl font-bold">@totalCustomer</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arama Çubuğu (Sunucu Taraflı Arama İçin Form) -->
+        <form method="get" action="/Customer/Index" class="mb-8 relative">
+            <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" name="search" value="@ViewBag.Search" 
+                   placeholder="Firma veya müşteri adı ile ara..." 
+                   class="w-full pl-12 pr-4 py-4 bg-white border rounded-2xl shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-lg" />
+        </form>
+
+        <!-- Müşteri Kartları Grid -->
+        @if (Model.Count > 0)
+        {
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="customerGrid">
+                @foreach (var item in Model)
+                {
+                    <div class="customer-item bg-white p-5 rounded-xl border shadow-sm transition-all hover:shadow-md hover:border-emerald-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 rounded-lg bg-gray-50 border">
+                                    <i class="bi bi-person-badge text-xl text-gray-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-lg leading-tight text-gray-800">@item.CustomerName</h3>
+                                    <!-- Eğer DTO'nuzda email veya telefon varsa buraya ekleyebilirsiniz. Örnek: -->
+                                    <!-- <p class="text-sm text-gray-500">item.Phone</p> -->
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="/Customer/Update/@item.Id" class="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600" title="Düzenle">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a href="/Customer/Delete/@item.Id" onclick="return confirm('Bu müşteriyi silmek istediğinize emin misiniz?')" class="p-2 hover:bg-red-100 text-red-600 rounded-lg transition-colors" title="Sil">
+                                    <i class="bi bi-trash3"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="bg-white border-2 border-dashed rounded-3xl p-12 text-center">
+                <i class="bi bi-people text-5xl text-gray-300 mb-4 block"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Müşteri Bulunamadı</h3>
+                <p class="text-gray-500">Aramanızla eşleşen veya sisteme kayıtlı bir müşteri yok.</p>
+                <a href="/Customer/Index" class="mt-4 text-emerald-600 font-bold hover:underline inline-block">Tüm Listeye Dön</a>
+            </div>
+        }
+
+        <!-- Sayfalama Kontrolleri -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            <div class="mt-12 flex items-center justify-center gap-2">
+                @if (ViewBag.CurrentPage > 1)
+                {
+                    <a href="/Customer/Index?page=@(ViewBag.CurrentPage - 1)&search=@ViewBag.Search"
+                       class="p-2 w-10 h-10 flex items-center justify-center rounded-xl border bg-white text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                }
+
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <a href="/Customer/Index?page=@i&search=@ViewBag.Search"
+                       class="w-10 h-10 flex items-center justify-center rounded-xl border font-bold transition-all
+                               @(ViewBag.CurrentPage == i ? "bg-emerald-600 text-white border-emerald-600 shadow-lg shadow-emerald-100" : "bg-white text-gray-600 hover:bg-gray-50")">
+                        @i
+                    </a>
+                }
+
+                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                {
+                    <a href="/Customer/Index?page=@(ViewBag.CurrentPage + 1)&search=@ViewBag.Search"
+                       class="p-2 w-10 h-10 flex items-center justify-center rounded-xl border bg-white text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 transition-all">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                }
+            </div>
+
+            <div class="text-center mt-4 text-sm text-gray-400">
+                Toplam <strong>@ViewBag.TotalCount</strong> müşteriden, sayfa <strong>@ViewBag.CurrentPage</strong> / @ViewBag.TotalPages gösteriliyor.
+            </div>
+        }
+    </main>
+</div>

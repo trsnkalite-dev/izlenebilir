@@ -1,0 +1,263 @@
+﻿@model List<GoodsReceiptDto.ResultGoodsReceiptDto>
+
+
+
+@{
+    ViewData["Title"] = "Girdi Stok Durumu (Anlık)";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-primary mb-0">Girdi Stok Durumu (Anlık)</h2>
+            <p class="text-muted small mb-0">Aktif stok miktarlarını ve hareketlerini buradan takip edebilirsiniz.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="generatePDF()" class="btn btn-outline-danger rounded-pill px-4 shadow-sm">
+                <i class="bi bi-file-earmark-pdf me-2"></i>PDF Döküm
+            </button>
+            <a href="/GoodsReceipt/Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-plus-lg me-2"></i>Yeni Mal Kabul Girişi
+            </a>
+        </div>
+    </div>
+
+    <!-- Genel Durum Özet Kartları -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+        <div class="col">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-primary text-white">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                            <i class="bi bi-box-seam fs-4"></i>
+                        </div>
+                        <h6 class="mb-0 fw-bold">Toplam Envanter</h6>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <div>
+                            <span class="display-6 fw-bold">@((ViewBag.TotalStockQty ?? 0).ToString("N1"))</span>
+                            <span class="fs-5">KG</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-danger text-white">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                            <i class="bi bi-exclamation-octagon fs-4"></i>
+                        </div>
+                        <h6 class="mb-0 fw-bold">SKT Dolan Ürünler</h6>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <div>
+                            <span class="display-6 fw-bold">@(ViewBag.ExpiredCount ?? 0)</span>
+                            <span class="fs-5">Kalem</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card border-0 shadow-sm rounded-4 h-100 bg-warning text-dark">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-dark bg-opacity-10 rounded-circle p-2 me-3">
+                            <i class="bi bi-clock-history fs-4"></i>
+                        </div>
+                        <h6 class="mb-0 fw-bold">Kritik Stok Süresi (30 Gün)</h6>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <div>
+                            <span class="display-6 fw-bold">@(ViewBag.UpcomingCount ?? 0)</span>
+                            <span class="fs-5">Kalem</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtreleme Alanı -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-light">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-secondary">ÜRÜN ADI</label>
+                <input type="text" name="stockName" value="@ViewBag.StockName" class="form-control rounded-pill border-0 shadow-sm" placeholder="Ürün ara..." />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-secondary">DEPO ADI</label>
+                <select name="warehouseName" class="form-select rounded-pill border-0 shadow-sm">
+                    <option value="">Tüm Depolar</option>
+                    @if (ViewBag.Warehouses != null)
+                    {
+                        foreach (var warehouse in ViewBag.Warehouses)
+                        {
+                            if (ViewBag.SelectedWarehouse == warehouse)
+                            {
+                                <option value="@warehouse" selected>@warehouse</option>
+                            }
+                            else
+                            {
+                                <option value="@warehouse">@warehouse</option>
+                            }
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-dark rounded-pill px-4 flex-grow-1 shadow-sm">
+                    <i class="bi bi-search me-2"></i>Filtrele
+                </button>
+                <a href="/GoodsReceipt/Index" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table id="goodsReceiptTable" class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Ürün Adı</th>
+                        <th>Stok Kodu</th>
+                        <th>Grup</th>
+                        <th>Toplam Miktar</th>
+                        <th>Bulunduğu Depolar</th>
+                        <th>Kritik SKT</th>
+                        <th class="text-end pe-4">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        var now = DateTime.Now;
+                        @foreach (var item in Model)
+                        {
+                            var isExpired = item.ExpiryDate.HasValue && item.ExpiryDate < now;
+                            var isUpcoming = item.ExpiryDate.HasValue && item.ExpiryDate >= now && item.ExpiryDate <= now.AddDays(30);
+                            
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-primary">@item.StockName</div>
+                                </td>
+                                <td><span class="badge bg-secondary-subtle text-secondary">@item.StockKodu</span></td>
+                                <td>@item.Grup</td>
+                                <td>
+                                    <span class="fs-5 fw-bold @(item.Quantity <= 0 ? "text-danger" : "text-dark")">
+                                        @item.Quantity.ToString("N2")
+                                    </span>
+                                    <small class="text-muted">KG</small>
+                                </td>
+                                <td>
+                                    <small class="text-muted text-wrap d-inline-block" style="max-width: 200px;">@item.DepoAdi</small>
+                                </td>
+                                <td>
+                                    @if (item.ExpiryDate.HasValue)
+                                    {
+                                        <span class="badge @(isExpired ? "bg-danger" : (isUpcoming ? "bg-warning text-dark" : "bg-success-subtle text-success")) rounded-pill">
+                                            @item.ExpiryDate.Value.ToString("dd.MM.yyyy")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="/GoodsReceipt/Details?stockName=@System.Net.WebUtility.UrlEncode(item.StockName)&id=@item.StockId" class="btn btn-primary rounded-pill btn-sm px-3 shadow-sm">
+                                        <i class="bi bi-clock-history me-1"></i> Hareketler
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-info-circle fs-2 d-block mb-2"></i>
+                                Henüz stok kaydı bulunmamaktadır.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        function generatePDF() {
+            try {
+                // Kütüphane kontrolü
+                var jsPDFLib = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+                
+                if (!jsPDFLib) {
+                    alert("PDF kütüphanesi (jsPDF) yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.");
+                    return;
+                }
+
+                const doc = new jsPDFLib({
+                    orientation: 'l',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Başlık ve Bilgiler
+                doc.setFontSize(18);
+                doc.setTextColor(44, 62, 80);
+                doc.text("MAL KABUL (GIRDI KONTROL) LISTESI", 14, 20);
+                
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text("Rapor Tarihi: " + new Date().toLocaleDateString('tr-TR'), 14, 28);
+
+                // Tablo Oluşturma
+                if (typeof doc.autoTable !== 'function') {
+                    alert("PDF Tablo eklentisi (autoTable) yüklenemedi.");
+                    return;
+                }
+
+                doc.autoTable({
+                    html: '#goodsReceiptTable',
+                    startY: 35,
+                    theme: 'grid',
+                    headStyles: { 
+                        fillColor: [44, 62, 80], 
+                        textColor: [255, 255, 255], 
+                        fontStyle: 'bold',
+                        halign: 'center'
+                    },
+                    bodyStyles: { 
+                        fontSize: 9,
+                        halign: 'center'
+                    },
+                    columnStyles: {
+                        0: { halign: 'left' },
+                        1: { halign: 'left', fontStyle: 'bold' },
+                        2: { halign: 'left' }
+                    },
+                    // Son sütunu (İşlemler) hariç tut
+                    columns: [0, 1, 2, 3, 4, 5],
+                    margin: { top: 35 }
+                });
+
+                const fileName = "Mal_Kabul_Listesi_" + new Date().toISOString().slice(0,10) + ".pdf";
+                doc.save(fileName);
+
+            } catch (error) {
+                console.error("PDF Hatası:", error);
+                alert("PDF oluşturulurken bir teknik hata oluştu: " + error.message);
+            }
+        }
+    </script>
+}
+

@@ -1,0 +1,461 @@
+﻿@model List<KaliteWeb.UI.Dto.LabelDto.LabelDto.ProductLabelResponseDto  >
+
+
+
+@{
+    var depos = ViewBag.Depos as List<KaliteWeb.UI.Dto.LabelDto.LabelDto.DepoDto> ?? new List<KaliteWeb.UI.Dto.LabelDto.LabelDto.DepoDto>();
+    var receipts = ViewBag.GoodsReceipts as IEnumerable<dynamic> ?? new List<dynamic>();
+}
+
+<div class="container mt-4">
+
+    <h4>Toplam Etiket: <span id="toplamEtiket"></span></h4>
+
+    <!-- SORGULA -->
+    <div class="row mb-4 p-3 bg-light border">
+        <div class="col-md-4">
+            <input type="text" id="lotSorgu" class="form-control" placeholder="Lot No...">
+        </div>
+        <div class="col-md-2">
+            <button onclick="sorgula()" class="btn btn-info w-100">Sorgula</button>
+        </div>
+    </div>
+
+    <!-- CREATE -->
+    <!-- CREATE -->
+    <form id="mainForm" class="row g-2 mb-3">
+        <div class="col-md-3">
+            <select name="GoodsReceiptId" class="form-select" required>
+                <option value="">Lütfen Seçiniz...</option>
+                @foreach (var s in receipts)
+                {
+                    @* s.Id değerinin dolu olduğundan (0 gelmediğinden) emin olun *@
+                    <option value="@s.Id">
+                        @(s.StockName ?? "Ürün Adı Yok") - @s.CompanyName
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <input name="Quantity" class="form-control" placeholder="Kg" required />
+        </div>
+
+        <div class="col-md-3">
+            <select name="DepoId" class="form-select">
+                @foreach (var d in depos)
+                {
+                    <option value="@d.DepoId">@d.DepoAdi</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-success w-100">Oluştur</button>
+        </div>
+    </form>
+    <!-- TABLE -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Lot</th>
+                <th>Ürün</th>
+                <th>Kg</th>
+                <th>Depo</th>
+                <th>İşlem</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <div class="row mb-4 mt-5">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white d-flex justify-content-between">
+                    <span>Stok Analiz Paneli</span>
+                    <select id="pivotType" class="form-select form-select-sm w-25">
+                        <option value="urun">Ürüne Göre</option>
+                        <option value="depo">Depoya Göre</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped" id="pivotTable">
+                        <thead><tr id="pivotHead"></tr></thead>
+                        <tbody id="pivotBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GEÇMİŞ MODALI -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="historyModalLabel">Lot Geçmişi ve Hareketler</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="list-group" id="historyList">
+                    <!-- JavaScript burayı dolduracak -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button type="button" class="btn btn-dark" id="btnPrintFromModal">🖨 Barkod Yazdır</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PARÇALAMA MODALI -->
+<div class="modal fade" id="processModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Et Parçalama İşlemi</h5>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="parentLotNo">
+                <div class="mb-3">
+                    <label>Ana Lot:</label>
+                    <input type="text" id="displayParentLot" class="form-control" disabled>
+                </div>
+                <div class="mb-3">
+                    <label>Yeni Ürün Adı:</label>
+                    <input type="text" id="yeniUrunAdi" class="form-control" placeholder="Örn: Pirzola">
+                </div>
+                <div class="mb-3">
+                    <label>Miktar (Kg):</label>
+                    <input type="number" id="yeniMiktar" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Hedef Depo:</label>
+                    <select id="hedefDepoId" class="form-select">
+                        @foreach (var d in depos)
+                        {
+                            <option value="@d.DepoId">@d.DepoAdi</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                <button class="btn btn-warning" onclick="confirmProcess()">Parçala ve Etiketle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function setLotSorgu(lotNo) {
+    $("#lotSorgu").val(lotNo);
+    $('html, body').animate({ scrollTop: 0 }, 'fast');
+    }
+    
+    // Model null gelebileceği için güvenli atama yapıyoruz
+    let appData = @Html.Raw(Json.Serialize(Model ?? new List<KaliteWeb.UI.Dto.LabelDto.LabelDto.ProductLabelResponseDto>()));
+    let depolar = @Html.Raw(Json.Serialize(depos));
+
+    //////////////////////////////////////////////////////
+    // NORMALIZE (🔥 EN KRİTİK)
+    //////////////////////////////////////////////////////
+    function normalizeData(data){
+    return data.map(x => ({
+    LotNo: x.LotNo ?? x.lotNo,
+    StockName: x.StockName ?? x.stockName,
+    Quantity: x.Quantity ?? x.quantity,
+    DepoId: x.DepoId ?? x.depoId,
+    CompanyName: x.CompanyName ?? x.companyName,
+    CreatedAt: x.CreatedAt ?? x.createdAt,
+    ExpiryDate: x.ExpiryDate ?? x.expiryDate,
+    ParentLotNo: x.ParentLotNo ?? x.parentLotNo // İzlenebilirlik için eklendi
+    }));
+    }
+
+    appData = normalizeData(appData);
+
+    function updateUI() {
+    render();
+    drawPivot();
+    }
+
+    //////////////////////////////////////////////////////
+    // FORMAT
+    //////////////////////////////////////////////////////
+    function formatDate(d) {
+    if (!d || d.startsWith("0001")) return "-";
+    try {
+    let dateObj = new Date(d);
+    if (isNaN(dateObj.getTime())) return "-";
+    return dateObj.toLocaleDateString("tr-TR", {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+    });
+    } catch (e) {
+    return "-";
+    }
+    }
+
+    //////////////////////////////////////////////////////
+    // RENDER
+    //////////////////////////////////////////////////////
+    function render(){
+    let html = "";
+    appData.forEach(x => {
+    let depo = depolar.find(d => (d.DepoId ?? d.depoId) == x.DepoId);
+    let depoAdi = depo ? (depo.DepoAdi ?? depo.depoAdi) : "-";
+    html += `
+    <tr>
+    <td style="cursor: pointer; color: blue; text-decoration: underline;" onclick="setLotSorgu('${x.LotNo}'); sorgula();">
+    ${x.LotNo}
+    </td>
+    <td>${x.StockName}</td>
+    <td>${x.Quantity}</td>
+    <td>${depoAdi}</td>
+    <td>
+    <button onclick="openProcessModal('${x.LotNo}')" class="btn btn-warning btn-sm" title="Parçala">✂️</button>
+    <button onclick="printLabel('${x.LotNo}')" class="btn btn-dark btn-sm">🖨</button>
+    <button onclick="sil('${x.LotNo}')" class="btn btn-danger btn-sm">Sil</button>
+    <button onclick="transfer('${x.LotNo}',1)" class="btn btn-primary btn-sm">A1</button>
+    <button onclick="transfer('${x.LotNo}',2)" class="btn btn-warning btn-sm">A2</button>
+    <button onclick="transfer('${x.LotNo}',3)" class="btn btn-success btn-sm">A3</button>
+    <button onclick="transfer('${x.LotNo}',4)" class="btn btn-dark btn-sm">A4</button>
+    </td>
+    </tr>`;
+    });
+    $("#tableBody").html(html);
+    $("#toplamEtiket").text(appData.length);
+    }
+
+    function drawPivot() {
+    let type = $("#pivotType").val();
+    let rowKey = (type === 'urun') ? 'StockName' : 'DepoAdi';
+    let colKey = (type === 'urun') ? 'DepoAdi' : 'StockName';
+    let rows =[...new Set(appData.map(i => i[rowKey]))];
+    let cols =[...new Set(appData.map(i => i[colKey]))];
+    let head = `<th>${type === 'urun' ? 'Ürün' : 'Depo'}</th>` + cols.map(c => `<th>${c}</th>`).join('');
+    $("#pivotHead").html(head);
+    let body = rows.map(r => {
+    let cells = cols.map(c => {
+    let sum = appData.filter(x => x[rowKey] == r && x[colKey] == c).reduce((a, b) => a + (b.Quantity || 0), 0);
+    return `<td>${sum > 0 ? sum : '-'}</td>`;
+    }).join('');
+    return `<tr><td><b>${r}</b></td>${cells}</tr>`;
+    }).join('');
+    $("#pivotBody").html(body);
+    }
+
+    $("#pivotType").on("change", function() { drawPivot(); });
+
+    $("#mainForm").submit(function(e){
+    e.preventDefault();
+    let selectedId = $("select[name='GoodsReceiptId']").val();
+    let data = {
+    GoodsReceiptId: Number(selectedId),
+    Quantity: Number($("input[name='Quantity']").val()),
+    DepoId: Number($("select[name='DepoId']").val())
+    };
+    $.ajax({
+    url: "/Label/Create",
+    type: "POST",
+    contentType: "application/json",
+    data: JSON.stringify(data),
+    success: function(res){ location.reload(); },
+    error: function(err) { alert("Hata: " + err.responseText); }
+    });
+    });
+
+    //////////////////////////////////////////////////////
+    // SORGULA (GELİŞTİRİLMİŞ İZLENEBİLİRLİK)
+    //////////////////////////////////////////////////////
+    function sorgula() {
+    let lotNo = $("#lotSorgu").val();
+    if (!lotNo) { alert("Lot gir ❗"); return; }
+
+    $.when(
+    $.get(`https://localhost:7241/api/Label/barcode/${lotNo}`),
+    $.get(`https://localhost:7241/api/Label/history/${lotNo}`)
+    ).done(function(barcodeRes, historyRes) {
+            
+    let data = barcodeRes[0];
+    let history = historyRes[0];
+
+    let ingredientsHtml = "";
+    let ingredients = data.productionIngredients || data.ProductionIngredients;
+
+    if (ingredients && ingredients.length > 0) {
+    ingredientsHtml = `
+    <div class="mt-3 p-3 border rounded bg-light">
+    <h6 class="text-primary border-bottom pb-2"><i class="bi bi-recipe"></i> Üretim Reçetesi (Kullanılan Hammaddeler)</h6>
+    <table class="table table-sm table-hover mb-0" style="font-size: 0.85rem;">
+    <thead>
+    <tr>
+    <th>Malzeme</th>
+    <th>Lot/Batch</th>
+    <th class="text-end">Miktar</th>
+    </tr>
+    </thead>
+    <tbody>`;
+    ingredients.forEach(i => {
+    let iName = i.name || i.Name;
+    let iBatch = i.batchNo || i.BatchNo;
+    let iAmount = i.amount || i.Amount;
+        
+    ingredientsHtml += `
+    <tr>
+    <td>${iName}</td>
+    <td>
+    <span class="text-primary" style="cursor:pointer; text-decoration:underline;"
+    onclick="setLotSorgu('${iBatch}'); sorgula();">
+    ${iBatch}
+    </span>
+    </td>
+    <td class="text-end">${iAmount} Kg</td>
+    </tr>`;
+    });
+
+    ingredientsHtml += `</tbody></table></div>`;
+    }// Modal HTML içeriğini oluştururken ingredientsHtml'i de ekliyoruz:
+  
+
+
+
+
+    let stockName = data.stockName || data.StockName || "-";
+    let lot = data.lotNo || data.LotNo || "-";
+    let parentLot = data.parentLotNo || data.ParentLotNo; // Kaynak Lot
+    let qty = data.quantity || data.Quantity || 0;
+    let company = data.companyName || data.CompanyName || "-";
+    let rawExpiryDate = data.expiryDate || data.ExpiryDate;
+    let sktTarih = rawExpiryDate ? formatDate(rawExpiryDate) : "-";
+
+    // İzlenebilirlik Satırı (Eğer ürün parçalanmışsa görünür)
+    let parentHtml = parentLot
+    ? `<li class="list-group-item list-group-item-warning d-flex justify-content-between align-items-center">
+    <span><b>Kaynak Lot:</b> ${parentLot}</span>
+    <button class="btn btn-sm btn-dark" onclick="setLotSorgu('${parentLot}'); sorgula();">Kaynağı Gör</button>
+    </li>`
+    : "";
+
+    let html = `
+    <li class="list-group-item bg-light"><b>Ürün:</b> ${stockName}</li>
+    <li class="list-group-item bg-light"><b>Lot:</b> ${lot}</li>
+    ${parentHtml}
+    <li class="list-group-item bg-light"><b>Kg:</b> ${qty} kg</li>
+    <li class="list-group-item"><b>Company:</b> ${company}</li>
+    <li class="list-group-item"><b>SKT:</b> ${sktTarih}</li>
+    
+    ${ingredientsHtml} <!-- 🔥 Üretim Reçetesi Buraya Gelecek -->
+
+    <hr>
+    <h6>Hareket Geçmişi:</h6>
+    `;
+
+    if(Array.isArray(history) && history.length > 0) {
+    // En eski tarihli kayıt (genelde listenin sonundadır) parçalama kaydıdır
+    history.forEach((h, index) => {
+    let hIslem = h.islem || h.Islem || "Transfer";
+    let hQty = h.quantity || h.Quantity || 0;
+    let hStock = h.stockName || h.StockName || "-";
+    let hDepo = h.depoAdi || h.DepoAdi || "-";
+    let hTarih = h.tarih || h.Tarih;
+
+    // Eğer ürün bir parentLot'a sahipse ve tarihe göre en eski kayıttaysak işlem adını değiştirelim
+    if (parentLot && index === history.length - 1) {
+    hIslem = "Parçalama / Giriş";
+    }
+                                
+    html += `
+    <li class="list-group-item">
+    <div class="d-flex justify-content-between align-items-center">
+    <div>
+    <b>${hIslem}</b><br/>
+    <small>Ürün: ${hStock}</small>
+    </div>
+    <div class="text-end">
+    <span class="badge bg-primary">${hQty} Kg</span><br/>
+    <small>📦 ${hDepo}</small>
+    </div>
+    </div>
+    <div class="mt-1 text-muted small text-end">
+    🕒 ${hTarih ? new Date(hTarih).toLocaleString("tr-TR") : "-"}
+    </div>
+    </li>`;
+    });
+    } else {
+    html += `<li class="list-group-item">Geçmiş kayıt bulunamadı.</li>`;
+    }
+
+    $("#historyList").html(html);
+    let modal = new bootstrap.Modal(document.getElementById('historyModal'));
+    modal.show();
+
+    $("#btnPrintFromModal").off("click").on("click", () => printLabel(lot));
+    })
+    .fail(function() {
+    alert("Lot bilgisi bulunamadı! ❌");
+    });
+    }
+    
+    function sil(lotNo){
+    if(!confirm("Bu etiketi silmek istediğinize emin misiniz?")) return;
+    $.ajax({
+    url: "/Label/Delete?lotNo=" + lotNo,
+    type: "POST",
+    success: function(res){ location.reload(); }
+    });
+    }
+
+    function transfer(lotNo, depoId){
+    $.post("/Label/Transfer", { LotNo: lotNo, DepoId: depoId }, function(res){
+    location.reload();
+    });
+    }
+
+    function openProcessModal(lotNo) {
+    $("#parentLotNo").val(lotNo);
+    $("#displayParentLot").val(lotNo);
+    new bootstrap.Modal(document.getElementById('processModal')).show();
+    }
+
+    function confirmProcess() {
+    let data = {
+    ParentLotNo: $("#parentLotNo").val(),
+    YeniUrunAdi: $("#yeniUrunAdi").val(),
+    YeniMiktar: parseFloat($("#yeniMiktar").val()),
+    HedefDepoId: parseInt($("#hedefDepoId").val())
+    };
+
+    $.ajax({
+    url: "https://localhost:7241/api/Label/process-label",
+    type: "POST",
+    contentType: "application/json",
+    data: JSON.stringify(data),
+    success: function(res) {
+    alert("Parçalama başarılı! Yeni Lot: " + res.lotNo);
+    location.reload();
+    },
+    error: function(err) {
+    alert("Hata: " + (err.responseText || "İşlem başarısız"));
+    }
+    });
+    }
+
+    $(document).ready(function() {
+    updateUI();
+    $("#lotSorgu").on('input', function() {
+    let val = $(this).val();
+    if (val.startsWith("LOT:")) {
+    let cleanLot = val.split(';')[0].replace('LOT:', '');
+    $(this).val(cleanLot);
+    sorgula();
+    }
+    });
+    });
+</script>

@@ -1,0 +1,107 @@
+﻿﻿
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Kalite Yönetimi</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm py-3">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold text-primary d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-shield-check fs-3 me-2"></i>
+                    <span>Kalite Yönetimi</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto gap-2">
+                        <li class="nav-item">
+                            <a class="nav-link fw-semibold" asp-controller="Home" asp-action="Index">Ana Sayfa</a>
+                        </li>
+
+                        <!-- Muayene ve Analiz -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
+                                Muayene & Analiz
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+                                <li><a class="dropdown-item py-2" asp-controller="AnteMortemReport" asp-action="Index"><i class="bi bi-file-earmark-medical text-primary me-2"></i>Ante Mortem</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="PostMortemReport" asp-action="Index"><i class="bi bi-file-earmark-medical text-danger me-2"></i>Post Mortem</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="MeetingMinute" asp-action="Index"><i class="bi bi-people text-warning me-2"></i>Toplantı Tutanağı</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="ValidationVerification" asp-action="Index"><i class="bi bi-check2-all text-info me-2"></i>Geçerli Kılma & Doğrulama</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="HaccpPlan" asp-action="Index"><i class="bi bi-shield-check text-success me-2"></i>HACCP Planı</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="ProductPrepration" asp-action="Index"><i class="bi bi-box-seam text-primary me-2"></i>Ürün Hazırlama</a></li>
+
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2" asp-controller="AnalysisReport" asp-action="Index"><i class="bi bi-graph-up text-success me-2"></i>Analiz Raporları</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Hijyen ve Kalite -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
+                                Hijyen & Kalite
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+                                <li><a class="dropdown-item py-2" asp-controller="CleaningControl" asp-action="Index"><i class="bi bi-droplet text-info me-2"></i>Temizlik Kontrol</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="CleaningPlan" asp-action="Index"><i class="bi bi-calendar-check text-primary me-2"></i>Temizlik Planı</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="NonConformingProduct" asp-action="Index"><i class="bi bi-exclamation-octagon text-warning me-2"></i>Uygunsuzluk Formu</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2" asp-controller="MeasurementDevice" asp-action="Index"><i class="bi bi-thermometer-half text-secondary me-2"></i>Ölçüm Cihazları</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="CorrectiveAction" asp-action="Index"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Düzeltici Faaliyetler</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Üretim ve Verim -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
+                                Üretim & Verim
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+                                <li><a class="dropdown-item py-2" asp-controller="Kesim" asp-action="Index"><i class="bi bi-box-seam text-warning me-2"></i>İzlenebilirlik</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2" asp-controller="CarcassYield" asp-action="Index"><i class="bi bi-calculator text-primary me-2"></i>Karkas Verim</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="SlaughterYield" asp-action="Index"><i class="bi bi-percent text-success me-2"></i>Kesim Randımanı</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Lojistik ve Doküman -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
+                                Lojistik & Doküman
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-2">
+                                <li><a class="dropdown-item py-2" asp-controller="Shipment" asp-action="Index"><i class="bi bi-clipboard-check text-success me-2"></i>Sevkiyat Takip</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item py-2" asp-controller="Document" asp-action="Index"><i class="bi bi-file-earmark-text text-primary me-2"></i>Doküman Yönetimi</a></li>
+                                <li><a class="dropdown-item py-2" asp-controller="CustomerFaq" asp-action="Index"><i class="bi bi-chat-quote text-success me-2"></i>Müşteri İkna Formu</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 -Kalite Yönetimi
+        </div>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

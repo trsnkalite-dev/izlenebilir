@@ -1,0 +1,601 @@
+﻿﻿
+
+@model KaliteWeb.UI.Dto.ProductPreparationDto.ProductPreparationDto.CreateProductPreparationDto
+
+@{
+    ViewData["Title"] = "Yeni Ürün Hazırlama Formu";
+}
+
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-lg rounded-4 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold mb-0 text-primary">Yeni Ürün Hazırlama Formu</h3>
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-arrow-left me-2"></i>Listeye Dön
+            </a>
+        </div>
+
+        <form asp-action="Create" method="post" id="prepForm">
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Doküman No</label>
+                    <input asp-for="DocumentNo" class="form-control rounded-3" value="TE-FR-77" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Yayın Tarihi</label>
+                    <input asp-for="PublishDate" type="date" class="form-control rounded-3" value="2025-03-07" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Rev. No</label>
+                    <input asp-for="RevisionNo" class="form-control rounded-3" value="1" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Rev. Tarih</label>
+                    <input asp-for="RevisionDate" class="form-control rounded-3" value="02.11.2025" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Sayfa No</label>
+                    <input asp-for="PageNo" class="form-control rounded-3" value="1/1" />
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4 bg-light p-3 rounded-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Tarih</label>
+                    <input asp-for="Date" type="date" class="form-control rounded-3" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Ürün Seçimi</label>
+                  <select asp-for="ProductName" class="form-select rounded-3" id="productSelect">
+                        <option value="">Ürün Seçiniz...</option>
+                        <option value="ADANA KÖFTE">ADANA KÖFTE</option>
+                        <option value="DANA KIYMA DÖNER">DANA KIYMA DÖNER</option>
+                        <option value="DANA SOSİS">DANA SOSİS</option>
+                        <option value="SUCUK">SUCUK</option>
+                        <option value="DANA DÖNER">DANA DÖNER</option>
+                        <option value="İNEGÖL KÖFTE">İNEGÖL KÖFTE</option>
+                        <option value="DANA MACAR SALAM">DANA MACAR SALAM</option>
+                        <option value="DANA ANTRİKOT">DANA ANTRİKOT</option>
+                        <option value="PİLİÇ DÖNER">PİLİÇ DÖNER</option>
+                        <option value="PİLİÇ SOSİS">PİLİÇ SOSİS</option>
+                        <option value="ŞEFTALİ KEBABI">ŞEFTALİ KEBABI</option>
+                        <option value="BURGER KÖFTE">BURGER KÖFTE</option>
+                        <option value="KASAP KÖFTE">KASAP KÖFTE</option>
+                        <option value="DANA ANTRİKOT">DANA ANTRİKOT</option>
+                        <option value="DANA KONTRAFİLE">DANA KONTRAFİLE</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Hedef Miktar (kg)</label>
+                    <input type="number" step="0.01" class="form-control rounded-3 fw-bold text-primary" id="targetAmount" value="100" oninput="loadRecipeAndCalculate()" />
+                </div>
+              
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Parti No</label>
+                    <input asp-for="BatchNo" class="form-control rounded-3" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Hamur Sıcaklık</label>
+                    <input asp-for="DoughTemp" class="form-control rounded-3" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Hamur PH</label>
+                    <input asp-for="DoughPh" class="form-control rounded-3" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Ortam Sıcaklık</label>
+                    <input asp-for="AmbientTemp" class="form-control rounded-3" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Dolum Sıcaklık</label>
+                    <input asp-for="FillingTemp" class="form-control rounded-3" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">Kontrol</label>
+                    <input asp-for="Control" class="form-control rounded-3" value="KYS" />
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label>Hedef Depo (Üretilen Ürünün Gireceği Yer)</label>
+                    <select asp-for="DepoId" class="form-control" required>
+                        <option value="">Depo Seçiniz...</option>
+                        @foreach (var depo in ViewBag.Depos) // Controller'dan depoları gönderin
+                        {
+                            <option value="@depo.DepoId">@depo.DepoAdi</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-list-check me-2"></i>Kullanılan Katkı Maddeleri</h5>
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered align-middle" id="ingredientsTable">
+                    <thead class="bg-light text-center small fw-bold">
+                        <tr>
+                            <th style="width: 250px;">Ürün Adı</th>
+                            <th>Depo / Parti No (Tercih Edilen)</th>
+                            <th style="width: 120px;">S.K.T.</th>
+                            <th style="width: 100px;">Toplam Stok</th>
+                            <th style="width: 120px;">Kullanılan (kg)</th>
+                            <th style="width: 40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dynamic rows -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-light fw-bold">
+                            <td colspan="4" class="text-end">TOPLAM KARIŞIM:</td>
+                            <td class="text-center text-primary" id="totalDisplay">0.00</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="addRow()">
+                    <i class="bi bi-plus-circle me-1"></i>Manuel Satır Ekle
+                </button>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Hazırlayan</label>
+                    <input asp-for="PreparedBy" class="form-control rounded-3" placeholder="İsim Soyisim" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Onaylayan</label>
+                    <input asp-for="ApprovedBy" class="form-control rounded-3" placeholder="İsim Soyisim" />
+                </div>
+            </div>
+
+            <input type="hidden" asp-for="IngredientsData" id="IngredientsDataHidden" />
+            <input type="hidden" asp-for="TotalAmount" id="TotalAmountHidden" />
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm" id="btnSubmit">
+                    <i class="bi bi-check2-circle me-2"></i><span id="submitText">Kaydet</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Unify submission logic
+            $('#prepForm').on('submit', function() {
+                // 1. Gather ingredients data
+                const rows = document.querySelectorAll('.ingredient-row');
+                const data = Array.from(rows).map(row => ({
+                    StockId: parseInt(row.querySelector('.stockId').value) || 0,
+                    Name: row.querySelector('.name').value,
+                    BatchNo: row.querySelector('.batchNo').value,
+                    ExpiryDate: row.querySelector('.expiryDate').value,
+                    Amount: parseFloat(row.querySelector('.amount').value) || 0
+                }));
+                document.getElementById('IngredientsDataHidden').value = JSON.stringify(data);
+
+                // 2. Visual feedback and prevent double click
+                const btn = $('#btnSubmit');
+                btn.prop('disabled', true);
+                $('#submitText').text('Kaydediliyor...');
+                return true;
+            });
+
+            // Initialize select2
+            $('#productSelect').select2({
+                placeholder: "Ürün Seçiniz...",
+                allowClear: true,
+                width: '100%'
+            }).on('change.select2', function() {
+                loadRecipeAndCalculate();
+            });
+
+            // Load recipes from API to supplement hardcoded ones
+            loadRecipesFromApi();
+        });
+
+        let apiRecipes = [];
+        async function loadRecipesFromApi() {
+            try {
+        const response = await fetch('https://localhost:7241/api/Recipe');
+                if (response.ok) {
+                    apiRecipes = await response.json();
+                    
+                    // Add new recipes to the select if they are not already there
+                    const select = $('#productSelect');
+                    apiRecipes.forEach(r => {
+                        const rName = r.name || r.Name;
+                        if (rName && select.find(`option[value="${rName}"]`).length === 0) {
+                            select.append(new Option(rName, rName));
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading recipes:", error);
+            }
+        }
+
+        const hardcodedRecipes = {
+            "ADANA KÖFTE": [
+                { name: "ADANA KÖFTE KOMBİ", ratio: 0.0858 },
+                { name: "DANA KIRINTI ET", ratio: 0.8576 },
+                { name: "GRİLLIN", ratio: 0.0016 },
+                { name: "KIRMIZI PUL BİBER", ratio: 0.0110 },
+                { name: "KURU SOĞAN", ratio: 0.0429 },
+                { name: "LAMB TOZ/GARNISH", ratio: 0.0012 }
+            ],
+            "DANA KIYMA DÖNER": [
+                { name: "DANA KIRINTI ET", ratio: 0.8022 },
+                { name: "G-PHOS SUPER", ratio: 0.0032 },
+                { name: "GRİLLIN", ratio: 0.0013 },
+                { name: "KURU SOĞAN", ratio: 0.0612 },
+                { name: "LAMB TOZ/GARNISH", ratio: 0.0032 },
+                { name: "PROTEX PLUS C", ratio: 0.0048 },
+                { name: "TOZ KARABİBER", ratio: 0.0019 },
+                { name: "TUZ", ratio: 0.0106 },
+                { name: "UN GALETA", ratio: 0.0053 },
+                { name: "W200/300", ratio: 0.0194 },
+                { name: "YAĞ KAVRAM", ratio: 0.0807 },
+                { name: "YOGURT", ratio: 0.0062 }
+            ],
+            "DANA SOSİS": [
+                { name: "NAT01", ratio: 0.0011 },
+                { name: "P10", ratio: 0.0035 },
+                { name: "NPS%3", ratio: 0.0068 },
+                { name: "TUZ", ratio: 0.0144 },
+                { name: "G-PHOS SUPER", ratio: 0.0217 },
+                { name: "SOSİS COMBİ", ratio: 0.0726 },
+                { name: "NIŞASTA PATATES", ratio: 0.0726 },
+                { name: "DANA KIRINTI ET", ratio: 0.8073 }
+            ],
+            "SUCUK": [
+                { name: "DANA KIRINTI ET", ratio: 0.9781 },
+                { name: "FERMQUICK", ratio: 0.0032 },
+                { name: "NAT01", ratio: 0.0010 },
+                { name: "NPS%3", ratio: 0.0055 },
+                { name: "SARIMSAK GRANÜL", ratio: 0.0123 }
+            ],
+            "DANA DÖNER": [
+                { name: "DANA LÖP ET", ratio: 0.9238 },
+                { name: "FİBEX-100", ratio: 0.0030 },
+                { name: "G-MATRİX", ratio: 0.0031 },
+                { name: "G-PHOS SUPER", ratio: 0.0043 },
+                { name: "KURU SOĞAN", ratio: 0.0307 },
+                { name: "TUZ", ratio: 0.0074 },
+                { name: "YOGURT", ratio: 0.0277 }
+            ],
+            "İNEGÖL KÖFTE": [
+                { name: "DANA KIRINTI ET", ratio: 0.8476 },
+                { name: "GRİLLIN", ratio: 0.0010 },
+                { name: "İNEGÖL KÖFTE KOMBİ", ratio: 0.0958 },
+                { name: "KURU SOĞAN", ratio: 0.0545 },
+                { name: "LAMB TOZ/GARNISH", ratio: 0.0010 }
+            ],
+            "KASAP KÖFTE": [
+                { name: "DANA KIRINTI ET", ratio: 0.8476 },
+                { name: "GRİLLIN", ratio: 0.0012 },
+                { name: "KASAP KÖFTE COMBI", ratio: 0.0958 },
+                { name: "KURU SOĞAN", ratio: 0.0545 },
+                { name: "SU ARITMA", ratio: 0.0945 },
+                { name: "LAMB TOZ/GARNISH", ratio: 0.0010 }
+            ],
+            "DANA MACAR SALAM": [
+                { name: "ARO SMOKE P-50", ratio: 0.0010 },
+                { name: "BUZ HAZIR", ratio: 0.1286 },
+                { name: "DANA KIRINTI ET", ratio: 0.7242 },
+                { name: "FIBEX-F20", ratio: 0.0039 },
+                { name: "MIX BAHARAT SALAM", ratio: 0.0272 },
+                { name: "NAT01", ratio: 0.0005 },
+                { name: "NIŞASTA PATATES", ratio: 0.0389 },
+                { name: "NPS%3", ratio: 0.0039 },
+                { name: "PURASAL HİPURE P PLUS", ratio: 0.0155 },
+                { name: "TUZ", ratio: 0.0078 },
+                { name: "YAĞ KAVRAM", ratio: 0.0485 }
+            ],
+            "DANA ANTRİKOT": [
+                { name: "ARO SMOKE P-50", ratio: 0.0003 },
+                { name: "DANA ANTRİKOT", ratio: 0.9361 },
+                { name: "FINE TEX-100", ratio: 0.0029 },
+                { name: "G-MATRİX", ratio: 0.0029 },
+                { name: "G-PHOS SUPER", ratio: 0.0018 },
+                { name: "KURU SOĞAN", ratio: 0.0245 },
+                { name: "TUZ", ratio: 0.0110 },
+                { name: "YOGURT", ratio: 0.0205 }
+            ],
+
+             "DANA KONTRAFİLE": [
+                { name: "ARO SMOKE P-50", ratio: 0.0003 },
+                { name: "DANA KONTRAFİLE", ratio: 0.9361 },
+                { name: "FINE TEX-100", ratio: 0.0028 },
+                { name: "G-MATRİX", ratio: 0.0028 },
+                { name: "G-PHOS SUPER", ratio: 0.0018 },
+                { name: "KURU SOĞAN", ratio: 0.0245 },
+                { name: "TUZ", ratio: 0.0110 },
+                { name: "YOGURT", ratio: 0.0205 }
+            ],
+
+
+            "PİLİÇ DÖNER": [
+                { name: "G-PHOS SUPER", ratio: 0.0046 },
+                { name: "KIRMIZI PUL BİBER", ratio: 0.0023 },
+                { name: "KİMYON TOZ", ratio: 0.0011 },
+                { name: "KONSERVE SALÇA-BİBER", ratio: 0.0115 },
+                { name: "KONSERVE SALÇA-DOMATES", ratio: 0.0092 },
+                { name: "PİLİÇ BUT FİLLET DERİLİ", ratio: 0.6183 },
+                { name: "PİLİÇ GÖĞÜS FİLLET DERİLİ", ratio: 0.3136 },
+                { name: "SARIMSAK GRANÜL", ratio: 0.0011 },
+                { name: "SIVI AYÇİÇEK YAĞI", ratio: 0.0127 },
+                { name: "TATLI KIRMIZI TOZ BİBER", ratio: 0.0058 },
+                { name: "TOZ KARABİBER", ratio: 0.0011 },
+                { name: "TUZ", ratio: 0.0075 },
+                { name: "W200/300", ratio: 0.0092 },
+                { name: "YOGURT", ratio: 0.0018 }
+            ],
+            "PİLİÇ SOSİS": [
+                { name: "ES-300", ratio: 0.0200 },
+                { name: "FINE TEX-100", ratio: 0.0200 },
+                { name: "FINE-FLAVOUR", ratio: 0.0020 },
+                { name: "FİNE-GUARD B", ratio: 0.0040 },
+                { name: "GIDA BOYASI", ratio: 0.0013 },
+                { name: "G-SMOKE P10", ratio: 0.0013 },
+                { name: "NIŞASTA PATATES", ratio: 0.0652 },
+                { name: "NPS%3", ratio: 0.0070 },
+                { name: "PİLİÇ DERİ", ratio: 0.1192 },
+                { name: "PİLİÇ GÖĞÜS FİLLET DERİLİ", ratio: 0.7282 },
+                { name: "SARIMSAK GRANÜL", ratio: 0.0007 },
+                { name: "SOSİS COMBİ", ratio: 0.0160 },
+                { name: "TUZ", ratio: 0.0153 }
+            ],
+            "ŞEFTALİ KEBABI": [
+                { name: "DANA KIRINTI ET", ratio: 0.4357 },
+                { name: "KURU SOĞAN", ratio: 0.1162 },
+                { name: "KUZU BANA ITHAL", ratio: 0.1895 },
+                { name: "KUZU DÖŞ KEMİKSİZ", ratio: 0.2324 },
+                { name: "MAYDANOZ", ratio: 0.0065 },
+                { name: "TOZ KARABİBER", ratio: 0.0087 },
+                { name: "TUZ", ratio: 0.0109 }
+            ],
+            "BURGER KÖFTE": [
+                { name: "DANA KIRINTI ET", ratio: 0.7194 },
+                { name: "ES-300", ratio: 0.0154 },
+                { name: "G-PHOS SUPER", ratio: 0.0020 },
+                { name: "HAMBURGER KOMBI", ratio: 0.0782 },
+                { name: "KURU SOĞAN", ratio: 0.0354 },
+                { name: "SU ARITMA", ratio: 0.0735 },
+                { name: "YAĞ KAVRAM", ratio: 0.0761 }
+            ]
+        };
+
+        const docNos = {
+            "ADANA KÖFTE": "TE-FR-78",
+            "KASAP KÖFTE": "TE-FR-80",
+            "DANA KIYMA DÖNER": "TE-FR-74",
+            "DANA SOSİS": "TE-FR-SOSIS",
+            "SUCUK": "TE-FR-81",
+            "DANA DÖNER": "TE-FR-75",
+            "İNEGÖL KÖFTE": "TE-FR-72",
+            "DANA MACAR SALAM": "TE-FR-88",
+            "DANA ANTRİKOT": "TE-FR-82",
+            "PİLİÇ DÖNER": "TE-FR-76",
+            "PİLİÇ SOSİS": "TE-FR-90",
+            "ŞEFTALİ KEBABI": "TE-FR-83",
+            "BURGER KÖFTE": "TE-FR-77",
+            "DANA KONTRAFİLE": "TE-FR-91"
+        };
+
+        let currentCalcId = 0;
+
+        async function loadRecipeAndCalculate() {
+            const productName = document.getElementById('productSelect').value;
+            const targetAmount = parseFloat(document.getElementById('targetAmount').value) || 0;
+            const tbody = document.querySelector('#ingredientsTable tbody');
+            const thisCalcId = ++currentCalcId;
+
+            if (!productName) {
+                tbody.innerHTML = '';
+                updateTotal();
+                return;
+            }
+
+            // 1. Try to find recipe from API first, then hardcoded
+            let recipeItems = [];
+            const apiRecipe = apiRecipes.find(r => (r.name || r.Name) === productName);
+            
+            if (apiRecipe) {
+                const items = apiRecipe.items || apiRecipe.Items || [];
+                recipeItems = items.map(item => ({
+                    name: item.ingredientName || item.IngredientName,
+                    ratio: (item.percentage || item.Percentage || 0) / 100
+                }));
+                const code = apiRecipe.code || apiRecipe.Code;
+                if (code) document.querySelector('input[name="DocumentNo"]').value = code;
+            } else if (hardcodedRecipes[productName]) {
+                recipeItems = hardcodedRecipes[productName];
+                if (docNos[productName]) document.querySelector('input[name=\"DocumentNo\"]').value = docNos[productName];
+            } else {
+                tbody.innerHTML = '<tr><td colspan=\"6\" class=\"text-center text-muted\">Reçete bulunamadı.</td></tr>';
+                return;
+            }
+
+            // 2. Fetch stock info for ingredients from STOCKS API (Anlık Stok)
+            const ingredientNames = recipeItems.map(item => item.name);
+            console.log("Fetching stock info for:", ingredientNames);
+            let stockInfo = {};
+            try {
+        const response = await fetch('https://localhost:7241/api/Stocks/latest-bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(ingredientNames)
+                });
+                if (response.ok) {
+                    stockInfo = await response.json();
+                    console.log("Stock info received:", stockInfo);
+                }
+            } catch (error) {
+                console.error("Stock info fetch error:", error);
+            }
+
+            if (thisCalcId !== currentCalcId) return;
+            tbody.innerHTML = ''; 
+
+            recipeItems.forEach(item => {
+                const amount = (item.ratio * targetAmount).toFixed(2);
+                
+                // Try to find the stock info by exact name, then case-insensitive
+                const stock = stockInfo[item.name] || 
+                             stockInfo[Object.keys(stockInfo).find(k => k.toLowerCase() === item.name.toLowerCase())] || 
+                             {};
+                
+                console.log(`Matching item ${item.name} -> found stock:`, stock);
+
+                addRow({ 
+                    id: stock.id || stock.Id || 0,
+                    name: item.name, 
+                    amount: amount, 
+                    batchNo: stock.lotNo || stock.LotNo || '', 
+                    expiryDate: stock.expiryDate || stock.ExpiryDate || '',
+                    depo: stock.depoAdi || stock.DepoAdi || '-',
+                    stockQty: stock.currentQuantity || stock.CurrentQuantity || 0
+                });
+            });
+            updateTotal();
+        }
+
+        async function fetchLotsForIngredient(input, preSelectedId = null) {
+            const name = input.value.trim();
+            const row = input.closest('tr');
+            const lotSelect = row.querySelector('.lotSelector');
+            const batchInput = row.querySelector('.batchNo');
+            
+            if (!name) return;
+
+            try {
+        const response = await fetch(`https://localhost:7241/api/Stocks?search=${encodeURIComponent(name)}`);
+                if (response.ok) {
+                    const allStocks = await response.json();
+                    
+                    // Improved matching: try exact match first, then includes
+                    let filtered = allStocks.filter(s => (s.stockName || s.StockName || '').toLowerCase() === name.toLowerCase() && (s.quantity || s.Quantity) >= 0);
+                    if (filtered.length === 0) {
+                        filtered = allStocks.filter(s => (s.stockName || s.StockName || '').toLowerCase().includes(name.toLowerCase()) && (s.quantity || s.Quantity) >= 0);
+                    }
+                    
+                    if (filtered.length > 0) {
+                        lotSelect.innerHTML = '<option value="">Seçiniz...</option>';
+                        filtered.forEach(s => {
+                            const sId = s.id || s.Id;
+                            const option = document.createElement('option');
+                            option.value = sId;
+                            option.text = `${s.lotNo || s.LotNo} (${(s.quantity || s.Quantity || 0).toFixed(1)} kg) - ${s.depoAdi || s.DepoAdi}`;
+                            option.dataset.json = JSON.stringify(s);
+                            if (preSelectedId && String(sId) === String(preSelectedId)) {
+                                option.selected = true;
+                            }
+                            lotSelect.appendChild(option);
+                        });
+                        lotSelect.style.display = 'block';
+                        batchInput.style.display = 'none';
+                        
+                        // If we have a preSelectedId, make sure fields are updated
+                        if (preSelectedId) {
+                            onLotChange(lotSelect);
+                        }
+                    } else {
+                        lotSelect.style.display = 'none';
+                        batchInput.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                console.error("Lot fetching error:", error);
+            }
+        }
+
+        function onLotChange(select) {
+            const row = select.closest('tr');
+            const option = select.options[select.selectedIndex];
+            if (!option || !option.dataset.json) return;
+
+            const stock = JSON.parse(option.dataset.json);
+            
+            row.querySelector('.stockId').value = stock.id || stock.Id;
+            row.querySelector('.batchNo').value = stock.lotNo || stock.LotNo;
+            const expiryDateInput = row.querySelector('.expiryDate');
+            if (expiryDateInput) {
+                const rawDate = stock.expiryDate || stock.ExpiryDate;
+                const date = new Date(rawDate);
+                expiryDateInput.value = isNaN(date.getTime()) ? (rawDate || '') : date.toLocaleDateString('tr-TR');
+            }
+            row.querySelector('.depo').value = stock.depoAdi || stock.DepoAdi;
+            const stockQtyDisplay = row.querySelectorAll('input[readonly]')[1];
+            if (stockQtyDisplay) {
+                stockQtyDisplay.value = parseFloat(stock.quantity || stock.Quantity || 0).toFixed(1);
+            }
+        }
+
+        function addRow(data = {}) {
+            const tbody = document.querySelector('#ingredientsTable tbody');
+            const tr = document.createElement('tr');
+            tr.className = 'ingredient-row';
+            const stockQty = parseFloat(data.stockQty) || 0;
+            const stockId = data.id || 0;
+
+            tr.innerHTML = `
+                <td>
+                    <input type="hidden" class="stockId" value="${stockId}" />
+                    <input type="text" class="form-control form-control-sm name" value="${data.name || ''}" onblur="fetchLotsForIngredient(this)" />
+                </td>
+                <td>
+                    <div class="input-group input-group-sm">
+                        <select class="form-select form-select-sm lotSelector" onchange="onLotChange(this)" style="display:none; max-width: 200px;">
+                            <option value="">Seçiniz...</option>
+                        </select>
+                        <input type="text" class="form-control form-control-sm depo text-xs" value="${data.depo || '-'}" readonly style="max-width: 180px;" />
+                        <input type="text" class="form-control form-control-sm batchNo" value="${data.batchNo || ''}" placeholder="Parti No" />
+                    </div>
+                </td>
+                <td><input type="text" class="form-control form-control-sm expiryDate" value="${data.expiryDate || ''}" /></td>
+                <td><input type="text" class="form-control form-control-sm text-center bg-light text-primary fw-bold" value="${stockQty.toFixed(1)}" readonly /></td>
+                <td><input type="number" step="0.01" class="form-control form-control-sm text-center amount ${data.amount > stockQty ? 'is-invalid' : ''}" value="${data.amount || '0.00'}" oninput="updateTotal()" /></td>
+                <td class="text-center"><button type="button" class="btn btn-sm text-danger" onclick="removeRow(this)"><i class="bi bi-trash"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+            if (data.name) {
+                fetchLotsForIngredient(tr.querySelector('.name'), stockId);
+            }
+            updateTotal();
+        }
+
+        function removeRow(btn) {
+            btn.closest('tr').remove();
+            updateTotal();
+        }
+
+        function updateTotal() {
+            const amounts = document.querySelectorAll('.amount');
+            let total = 0;
+            amounts.forEach(input => {
+                total += parseFloat(input.value) || 0;
+            });
+            document.getElementById('totalDisplay').innerText = total.toFixed(2);
+            document.getElementById('TotalAmountHidden').value = total.toFixed(2);
+        }
+    </script>
+}
+
+
+
+
+
+
+
+
+
+
+

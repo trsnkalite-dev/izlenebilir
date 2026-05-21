@@ -1,0 +1,98 @@
+﻿@model CreateCustomerDto
+
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Yeni Müşteri Ekle";
+}
+
+<!-- Tailwind CSS ve Bootstrap Icons -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<div class="min-h-screen bg-gray-100 flex items-center justify-center p-4 font-sans">
+    <!-- Form Kartı -->
+    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden transition-all border border-gray-100">
+
+        <!-- Header -->
+        <div class="p-8 border-b flex justify-between items-center bg-gray-50/50">
+            <div class="flex items-center gap-4">
+                <div class="bg-emerald-600 p-3 rounded-2xl shadow-lg shadow-emerald-100">
+                    <i class="bi bi-person-plus-fill text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-black text-gray-800 uppercase tracking-tight">Yeni Müşteri Ekle</h2>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Müşteri Kayıt Formu</p>
+                </div>
+            </div>
+            <a href="/Customer/Index" class="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                <i class="bi bi-x-lg text-gray-500"></i>
+            </a>
+        </div>
+
+        <!-- Form Başlangıcı -->
+        <form asp-action="Create" method="post" class="p-8 space-y-6">
+
+            <!-- API'den dönen hataları göstermek için -->
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl text-xs font-bold flex items-start gap-3">
+                    <i class="bi bi-exclamation-circle-fill mt-0.5"></i>
+                    <div asp-validation-summary="All"></div>
+                </div>
+            }
+
+            <!-- Müşteri Adı -->
+            <div>
+                <label asp-for="CustomerName" class="block text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-3 ml-1">Müşteri Adı / Ünvanı *</label>
+                <div class="relative group">
+                    <i class="bi bi-building absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors"></i>
+                    <input asp-for="CustomerName" required type="text"
+                           oninput="this.value = this.value.toUpperCase()"
+                           class="w-full pl-14 pr-14 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all font-bold text-gray-800 shadow-sm"
+                           placeholder="Örn: TARSAN ET ENTEGRE..." />
+                    
+                    <!-- Arama Butonu -->
+                    <button type="button" onclick="searchExistingCustomer()" 
+                            class="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-white text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all shadow-sm border border-gray-100"
+                            title="Mevcut Müşterilerde Ara">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+                <p class="text-[9px] text-gray-400 mt-2 ml-1 font-bold italic">* Müşteri adını büyük harflerle giriniz.</p>
+            </div>
+
+            <!-- Butonlar -->
+            <div class="pt-4 flex gap-4">
+                <a href="/Customer/Index"
+                   class="flex-1 px-4 py-4 bg-gray-100 text-gray-500 font-black rounded-2xl hover:bg-gray-200 transition-all text-center uppercase text-xs tracking-widest">
+                    İptal
+                </a>
+                <button type="submit"
+                        class="flex-[2] px-4 py-4 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all active:scale-95 uppercase text-xs tracking-widest flex items-center justify-center gap-2">
+                    <i class="bi bi-check-circle-fill"></i> Kaydet
+                </button>
+            </div>
+        </form>
+
+        <!-- Footer Info -->
+        <div class="bg-gray-50 p-6 border-t border-gray-100 text-center">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">TARSAN SEVKİYAT SİSTEMİ</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function searchExistingCustomer() {
+        const name = document.getElementById('CustomerName').value;
+        if (!name) {
+            alert('Lütfen aramak için bir isim giriniz.');
+            return;
+        }
+        
+        // Basit bir arama simülasyonu veya API çağrısı buraya gelebilir
+        console.log('Searching for:', name);
+        alert('"' + name + '" için arama yapılıyor... (Bu özellik geliştirme aşamasındadır)');
+    }
+</script>
+
